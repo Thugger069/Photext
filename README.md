@@ -14,6 +14,21 @@ PhoText lets users upload any image with text (flyers, posters, screenshots, sli
 
 ## Quick Start
 
+### Development Options
+
+**Option 1: GitHub Codespaces (Recommended for Quick Start)**
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new)
+
+1. Click the button above or open this repo in Codespaces
+2. Wait for the container to build (PostgreSQL included!)
+3. Run migrations: `pnpm prisma:migrate dev --name init`
+4. Start dev server: `pnpm dev`
+
+The database is automatically configured and running. No local setup needed!
+
+**Option 2: Local Development**
+
 ### Prerequisites
 
 - Node.js 18+ and pnpm (or npm/yarn)

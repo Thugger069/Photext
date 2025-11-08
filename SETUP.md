@@ -2,6 +2,46 @@
 
 This document provides a step-by-step guide to get PhoText up and running.
 
+## 🚀 Quick Start with GitHub Codespaces
+
+The fastest way to get started is using GitHub Codespaces:
+
+1. **Open in Codespaces:**
+   - Click the "Code" button on GitHub → "Codespaces" → "Create codespace"
+   - Or use the badge in README.md
+
+2. **Wait for Setup:**
+   - Codespaces will automatically:
+     - Install Node.js 20 and pnpm
+     - Start PostgreSQL 16 in a container
+     - Run `pnpm install`
+     - Run `pnpm prisma:generate`
+
+3. **Set Environment Variables:**
+   ```bash
+   cp .env.example .env
+   # DATABASE_URL is already configured via devcontainer!
+   # Just add NEXTAUTH_SECRET:
+   echo "NEXTAUTH_SECRET=$(openssl rand -base64 32)" >> .env
+   echo "NEXTAUTH_URL=https://$CODESPACE_NAME-3000.preview.app.github.dev" >> .env
+   ```
+
+4. **Run Migrations:**
+   ```bash
+   pnpm prisma:migrate dev --name init
+   ```
+
+5. **Start Development:**
+   ```bash
+   pnpm dev
+   ```
+
+The app will automatically open in your browser at the forwarded port!
+
+---
+
+## 💻 Local Development Setup
+
 ## ✅ What's Been Set Up
 
 The following files have been created and wired together:

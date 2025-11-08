@@ -1,0 +1,48 @@
+{
+  "name": "PhoText Codespace",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "PhoText Web",
+      "onAutoForward": "openBrowser"
+    },
+    "5432": {
+      "label": "PostgreSQL"
+    }
+  },
+  "remoteEnv": {
+    "DATABASE_URL": "postgresql://postgres:postgres@db:5432/photext"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "corepack enable && pnpm install && pnpm prisma:generate",
+  "updateContentCommand": "pnpm install",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "typescript.tsdk": "node_modules/typescript/lib"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  },
+  "services": {
+    "db": {
+      "image": "postgres:16",
+      "restart": "unless-stopped",
+      "env": {
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "postgres",
+        "POSTGRES_DB": "photext"
+      },
+      "forwardPorts": [5432]
+    }
+  }
+}
