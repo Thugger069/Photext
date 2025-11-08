@@ -1,0 +1,154 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+//
+// Enums
+//
+
+enum BillingPlan {
+  FREE
+  PRO
+}
+
+enum AiActionType {
+  REWRITE
+  GRAMMAR_FIX
+  POST_GENERATION
+  HASHTAG_SUGGESTION
+}
+
+//
+// Core auth models (NextAuth-compatible)
+//
+
+model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String?       @unique
+  emailVerified DateTime?
+  image         String?
+
+  // Billing / plan
+  billingPlan   BillingPlan   @default(FREE)
+
+  // Optional aggregate AI usage counters (for quotas/analytics)
+  aiTotalRewriteCount           Int @default(0)
+  aiTotalGrammarFixCount        Int @default(0)
+  aiTotalPostGenerationCount    Int @default(0)
+  aiTotalHashtagSuggestionCount Int @default(0)
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  projects      Project[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  // Add other provider-specific fields if needed
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+//
+// PhoText core domain
+//
+
+model Project {
+  id           String   @id @default(cuid())
+  userId       String?  // null for guest projects
+  user         User?    @relation(fields: [userId], references: [id])
+
+  // For guest sessions, we can store a stable anonymous key
+  guestKey     String?  @db.VarChar(64)
+
+  // Basic info
+  title        String   @default("Untitled Project")
+  imagePath    String   // path/URL to uploaded image
+
+  // Serialized canvas state:
+  // list of text boxes with text/coords/styles/zIndex, etc.
+  boxes        Json
+
+  // Optional derived metadata (for faster queries / future features)
+  dominantLanguage String? @db.VarChar(10)
+  lastPlatforms    String? // e.g. "instagram,x,linkedin" as CSV
+
+  // Per-project AI usage counters
+  aiRewriteCount           Int @default(0)
+  aiGrammarFixCount        Int @default(0)
+  aiPostGenerationCount    Int @default(0)
+  aiHashtagSuggestionCount Int @default(0)
+
+  // Optional compact cache of latest generated posts/hashtags
+  // (can be used to re-display posts without regenerating)
+  lastGeneratedPosts    Json? // { instagram: [...], x: [...], linkedin: [...] }
+  lastGeneratedHashtags Json? // { compact: [...], maximal: [...] }
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([guestKey])
+}
+
+//
+// (Optional) Fine-grained AI usage log per project, if you want later.
+// You can keep this in mind but comment out initially if not needed.
+//
+// model AiUsageEvent {
+//   id         String      @id @default(cuid())
+//   projectId  String
+//   project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+//   userId     String?
+//   user       User?       @relation(fields: [userId], references: [id])
+//   type       AiActionType
+//   tokensIn   Int         @default(0)
+//   tokensOut  Int         @default(0)
+//   createdAt  DateTime    @default(now())
+//
+//   @@index([projectId])
+//   @@index([userId])
+//   @@index([type, createdAt])
+// }
